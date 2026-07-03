@@ -1,0 +1,8 @@
+com/patricia/board/controller/BoardControllerTest.class
+com/patricia/board/config/WebSocketConfigTest.class
+com/patricia/board/exception/GlobalExceptionHandlerTest.class
+com/patricia/board/ModelAndDtoTest.class
+com/patricia/board/config/WebConfigTest.class
+com/patricia/board/BoardBackendApplicationTests.class
+com/patricia/board/websocket/BoardWebSocketControllerTest.class
+com/patricia/board/service/BoardServiceTest.class
