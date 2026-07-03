@@ -1,8 +1,0 @@
-/home/minin/storage/Uni/PATRICIA/PATRICIA_Board_Backend/src/test/java/com/patricia/board/BoardBackendApplicationTests.java
-/home/minin/storage/Uni/PATRICIA/PATRICIA_Board_Backend/src/test/java/com/patricia/board/exception/GlobalExceptionHandlerTest.java
-/home/minin/storage/Uni/PATRICIA/PATRICIA_Board_Backend/src/test/java/com/patricia/board/config/WebConfigTest.java
-/home/minin/storage/Uni/PATRICIA/PATRICIA_Board_Backend/src/test/java/com/patricia/board/ModelAndDtoTest.java
-/home/minin/storage/Uni/PATRICIA/PATRICIA_Board_Backend/src/test/java/com/patricia/board/websocket/BoardWebSocketControllerTest.java
-/home/minin/storage/Uni/PATRICIA/PATRICIA_Board_Backend/src/test/java/com/patricia/board/controller/BoardControllerTest.java
-/home/minin/storage/Uni/PATRICIA/PATRICIA_Board_Backend/src/test/java/com/patricia/board/config/WebSocketConfigTest.java
-/home/minin/storage/Uni/PATRICIA/PATRICIA_Board_Backend/src/test/java/com/patricia/board/service/BoardServiceTest.java
