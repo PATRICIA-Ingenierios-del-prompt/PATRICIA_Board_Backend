@@ -24,9 +24,9 @@ public class BoardController {
     private final SimpMessagingTemplate messagingTemplate;
 
     @PostMapping
-    @Operation(summary = "Create a new board", description = "Creates a new empty board and returns its unique ID.")
-    public ResponseEntity<CreateBoardResponse> createBoard() {
-        UUID boardId = boardService.createBoard();
+    @Operation(summary = "Create a new board", description = "Creates a new empty board (optionally with a custom ID) and returns its unique ID.")
+    public ResponseEntity<CreateBoardResponse> createBoard(@RequestParam(required = false) UUID customId) {
+        UUID boardId = boardService.createBoard(customId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new CreateBoardResponse(boardId));
     }
 
