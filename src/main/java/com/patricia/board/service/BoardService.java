@@ -13,10 +13,14 @@ public class BoardService {
 
     private final ConcurrentHashMap<UUID, BoardState> boards = new ConcurrentHashMap<>();
 
-    public UUID createBoard() {
-        UUID boardId = UUID.randomUUID();
+    public UUID createBoard(UUID customId) {
+        UUID boardId = customId != null ? customId : UUID.randomUUID();
         boards.put(boardId, new BoardState(boardId));
         return boardId;
+    }
+
+    public UUID createBoard() {
+        return createBoard(null);
     }
 
     public BoardState getBoard(UUID boardId) {

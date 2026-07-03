@@ -4,6 +4,6 @@ board-backend,com.patricia.board.config,WebSocketConfig,0,56,0,0,0,10,0,3,0,3
 board-backend,com.patricia.board.websocket,BoardWebSocketController,0,31,0,6,0,7,0,5,0,2
 board-backend,com.patricia.board,BoardBackendApplication,0,8,0,0,0,3,0,2,0,2
 board-backend,com.patricia.board.model,BoardState,0,11,0,0,0,4,0,1,0,1
-board-backend,com.patricia.board.service,BoardService,0,81,0,8,0,22,0,10,0,6
+board-backend,com.patricia.board.service,BoardService,2,87,1,9,0,23,1,11,0,7
 board-backend,com.patricia.board.exception,GlobalExceptionHandler,0,101,0,0,0,19,0,4,0,4
-board-backend,com.patricia.board.controller,BoardController,0,47,0,0,0,9,0,4,0,4
+board-backend,com.patricia.board.controller,BoardController,0,48,0,0,0,9,0,4,0,4

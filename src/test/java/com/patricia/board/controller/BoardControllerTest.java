@@ -42,14 +42,14 @@ class BoardControllerTest {
     @Test
     void shouldCreateBoard() throws Exception {
         UUID boardId = UUID.randomUUID();
-        when(boardService.createBoard()).thenReturn(boardId);
+        when(boardService.createBoard(any())).thenReturn(boardId);
 
         mockMvc.perform(post("/api/boards"))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.boardId").value(boardId.toString()));
 
-        verify(boardService).createBoard();
+        verify(boardService).createBoard(any());
     }
 
     @Test
