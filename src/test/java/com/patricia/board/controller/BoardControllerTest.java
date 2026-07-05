@@ -116,7 +116,7 @@ class BoardControllerTest {
                 .andExpect(status().isOk());
 
         verify(boardService).clearBoard(boardId);
-        verify(messagingTemplate).convertAndSend(eq("/topic/board/" + boardId + "/clear"), eq("CLEAR"));
+        verify(messagingTemplate).convertAndSend(eq("/exchange/exchange/amq.topic/board." + boardId + ".clear"), eq("CLEAR"));
     }
 
     @Test

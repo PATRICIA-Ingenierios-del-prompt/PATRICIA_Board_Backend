@@ -20,6 +20,9 @@ import java.util.UUID;
 @Tag(name = "Board Management", description = "Endpoints for managing collaborative whiteboards")
 public class BoardController {
 
+    private static final String BROKER_PREFIX = "/exchange";
+    private static final String RABBIT_EXCHANGE = "amq.topic";
+
     private final BoardService boardService;
     private final SimpMessagingTemplate messagingTemplate;
 
@@ -49,7 +52,11 @@ public class BoardController {
     public ResponseEntity<Void> clearBoard(@PathVariable UUID boardId) {
         boardService.clearBoard(boardId);
         // Broadcast clear event to all subscribers
-        messagingTemplate.convertAndSend("/topic/board/" + boardId + "/clear", "CLEAR");
+        messagingTemplate.convertAndSend(brokerDestination(boardId, ".clear"), "CLEAR");
         return ResponseEntity.ok().build();
+    }
+
+    private String brokerDestination(UUID boardId, String suffix) {
+        return BROKER_PREFIX + "/" + RABBIT_EXCHANGE + "/board." + boardId + suffix;
     }
 }

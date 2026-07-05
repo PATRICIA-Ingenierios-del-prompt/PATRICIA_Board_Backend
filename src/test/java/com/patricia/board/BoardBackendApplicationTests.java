@@ -5,7 +5,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
-@SpringBootTest
+@SpringBootTest(properties = "board.rabbitmq.auto-startup=false")
 class BoardBackendApplicationTests {
 
     @Test
@@ -16,7 +16,10 @@ class BoardBackendApplicationTests {
     @Test
     void mainStartsApplication() {
         assertDoesNotThrow(() -> {
-            BoardBackendApplication.main(new String[]{"--spring.main.web-application-type=none"});
+            BoardBackendApplication.main(new String[]{
+                    "--spring.main.web-application-type=none",
+                    "--board.rabbitmq.auto-startup=false"
+            });
         });
     }
 }

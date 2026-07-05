@@ -69,7 +69,7 @@ class BoardWebSocketControllerTest {
         controller.handleStroke(boardId, stroke);
 
         verify(boardService).addStroke(boardId, stroke);
-        verify(messagingTemplate).convertAndSend("/topic/board/" + boardId, stroke);
+        verify(messagingTemplate).convertAndSend("/exchange/exchange/amq.topic/board." + boardId, stroke);
     }
 
     @Test
@@ -79,7 +79,7 @@ class BoardWebSocketControllerTest {
 
         controller.handleCursor(boardId, cursor);
 
-        verify(messagingTemplate).convertAndSend("/topic/board/" + boardId + "/cursor", cursor);
+        verify(messagingTemplate).convertAndSend("/exchange/exchange/amq.topic/board." + boardId + ".cursor", cursor);
         verifyNoInteractions(boardService);
     }
 }
