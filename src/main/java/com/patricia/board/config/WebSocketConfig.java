@@ -1,40 +1,37 @@
 package com.patricia.board.config;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+/**
+ * STOMP con simple broker (in-JVM). ANTES: enableStompBrokerRelay contra el
+ * plugin STOMP de RabbitMQ. Se cambio porque Amazon MQ NO permite el plugin
+ * STOMP (v3 §6.6): el fan-out cross-pod ahora lo hace el backplane Redis
+ * (paquete {@code com.patricia.board.backplane}), no RabbitMQ.
+ *
+ * El PREFIJO se dejo en "/exchange" (ademas de /topic y /queue) para que los
+ * paths existentes que arrancan con /exchange/amq.topic/board.* SIGAN
+ * funcionando y no haya que tocar el frontend. Para el simple broker el
+ * prefijo es solo un namespace de subscripcion, no hay routing real detras.
+ */
 @Configuration
 @EnableWebSocketMessageBroker
-@RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-
-    private final BoardRabbitProperties rabbitProperties;
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        var brokerRelay = config.enableStompBrokerRelay("/exchange");
-        brokerRelay.setRelayHost(rabbitProperties.relayHost());
-        brokerRelay.setRelayPort(rabbitProperties.relayPort());
-        brokerRelay.setClientLogin(rabbitProperties.clientLogin());
-        brokerRelay.setClientPasscode(rabbitProperties.clientPasscode());
-        brokerRelay.setSystemLogin(rabbitProperties.systemLogin());
-        brokerRelay.setSystemPasscode(rabbitProperties.systemPasscode());
-        brokerRelay.setVirtualHost(rabbitProperties.virtualHost());
-        brokerRelay.setAutoStartup(rabbitProperties.autoStartup());
-
+        config.enableSimpleBroker("/exchange", "/topic", "/queue");
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // The endpoint clients will connect to
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*")
-                .withSockJS(); // Optional fallback, or can just use raw websocket
+                .withSockJS();
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*");
     }

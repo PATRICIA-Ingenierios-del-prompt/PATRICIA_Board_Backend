@@ -7,7 +7,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.UUID;
@@ -20,7 +19,7 @@ public class BoardWebSocketController {
     private static final String RABBIT_EXCHANGE = "amq.topic";
 
     private final BoardService boardService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final BoardBroadcaster broadcaster;
 
     @MessageMapping("/board/{boardId}/stroke")
     public void handleStroke(@DestinationVariable UUID boardId, @Payload Stroke stroke) {
@@ -28,18 +27,18 @@ public class BoardWebSocketController {
         if (stroke == null || stroke.getPoints() == null || stroke.getPoints().isEmpty()) {
             return;
         }
-        
+
         // Add stroke to board state
         boardService.addStroke(boardId, stroke);
-        
-        // Broadcast the stroke to all subscribers
-        messagingTemplate.convertAndSend(brokerDestination(boardId, ""), stroke);
+
+        // Broadcast the stroke to all subscribers (via backplane if enabled)
+        broadcaster.send(brokerDestination(boardId, ""), stroke);
     }
 
     @MessageMapping("/board/{boardId}/cursor")
     public void handleCursor(@DestinationVariable UUID boardId, @Payload CursorMessage cursorMessage) {
         // Broadcast cursor directly to subscribers without storing
-        messagingTemplate.convertAndSend(brokerDestination(boardId, ".cursor"), cursorMessage);
+        broadcaster.send(brokerDestination(boardId, ".cursor"), cursorMessage);
     }
 
     private String brokerDestination(UUID boardId, String suffix) {
