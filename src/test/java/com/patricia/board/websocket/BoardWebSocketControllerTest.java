@@ -6,7 +6,6 @@ import com.patricia.board.model.Stroke;
 import com.patricia.board.service.BoardService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,14 +16,14 @@ import static org.mockito.Mockito.*;
 class BoardWebSocketControllerTest {
 
     private BoardService boardService;
-    private SimpMessagingTemplate messagingTemplate;
+    private BoardBroadcaster broadcaster;
     private BoardWebSocketController controller;
 
     @BeforeEach
     void setUp() {
         boardService = mock(BoardService.class);
-        messagingTemplate = mock(SimpMessagingTemplate.class);
-        controller = new BoardWebSocketController(boardService, messagingTemplate);
+        broadcaster = mock(BoardBroadcaster.class);
+        controller = new BoardWebSocketController(boardService, broadcaster);
     }
 
     @Test
@@ -33,7 +32,7 @@ class BoardWebSocketControllerTest {
         controller.handleStroke(boardId, null);
 
         verifyNoInteractions(boardService);
-        verifyNoInteractions(messagingTemplate);
+        verifyNoInteractions(broadcaster);
     }
 
     @Test
@@ -45,7 +44,7 @@ class BoardWebSocketControllerTest {
         controller.handleStroke(boardId, stroke);
 
         verifyNoInteractions(boardService);
-        verifyNoInteractions(messagingTemplate);
+        verifyNoInteractions(broadcaster);
     }
 
     @Test
@@ -57,7 +56,7 @@ class BoardWebSocketControllerTest {
         controller.handleStroke(boardId, stroke);
 
         verifyNoInteractions(boardService);
-        verifyNoInteractions(messagingTemplate);
+        verifyNoInteractions(broadcaster);
     }
 
     @Test
@@ -69,7 +68,7 @@ class BoardWebSocketControllerTest {
         controller.handleStroke(boardId, stroke);
 
         verify(boardService).addStroke(boardId, stroke);
-        verify(messagingTemplate).convertAndSend("/exchange/exchange/amq.topic/board." + boardId, stroke);
+        verify(broadcaster).send("/exchange/amq.topic/board." + boardId, stroke);
     }
 
     @Test
@@ -79,7 +78,7 @@ class BoardWebSocketControllerTest {
 
         controller.handleCursor(boardId, cursor);
 
-        verify(messagingTemplate).convertAndSend("/exchange/exchange/amq.topic/board." + boardId + ".cursor", cursor);
+        verify(broadcaster).send("/exchange/amq.topic/board." + boardId + ".cursor", cursor);
         verifyNoInteractions(boardService);
     }
 }

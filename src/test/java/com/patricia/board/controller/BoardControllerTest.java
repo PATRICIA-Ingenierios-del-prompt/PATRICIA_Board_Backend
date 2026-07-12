@@ -6,12 +6,12 @@ import com.patricia.board.dto.CreateBoardResponse;
 import com.patricia.board.model.BoardState;
 import com.patricia.board.model.Stroke;
 import com.patricia.board.service.BoardService;
+import com.patricia.board.websocket.BoardBroadcaster;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.ArrayList;
@@ -34,7 +34,7 @@ class BoardControllerTest {
     private BoardService boardService;
 
     @MockBean
-    private SimpMessagingTemplate messagingTemplate;
+    private BoardBroadcaster broadcaster;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -116,7 +116,7 @@ class BoardControllerTest {
                 .andExpect(status().isOk());
 
         verify(boardService).clearBoard(boardId);
-        verify(messagingTemplate).convertAndSend(eq("/exchange/exchange/amq.topic/board." + boardId + ".clear"), eq("CLEAR"));
+        verify(broadcaster).send(eq("/exchange/amq.topic/board." + boardId + ".clear"), eq("CLEAR"));
     }
 
     @Test
@@ -129,7 +129,7 @@ class BoardControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(boardService).clearBoard(boardId);
-        verifyNoInteractions(messagingTemplate);
+        verifyNoInteractions(broadcaster);
     }
 
     @Test
