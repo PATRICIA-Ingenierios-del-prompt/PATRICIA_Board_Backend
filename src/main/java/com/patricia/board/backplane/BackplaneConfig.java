@@ -7,19 +7,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-/**
- * Cableado del backplane (activo solo con backplane.enabled=true).
- *
- * Board NO usa otro Redis (a diferencia de Location que tiene cache), asi que
- * NO hace falta el truco @Primary sobre el ConnectionFactory auto-configurado.
- * Solo declaramos el factory + template + listener container del backplane.
- */
+
 @Configuration
 @ConditionalOnProperty(prefix = "backplane", name = "enabled", havingValue = "true")
 public class BackplaneConfig {
@@ -31,7 +26,17 @@ public class BackplaneConfig {
         if (props.getRedis().getPassword() != null && !props.getRedis().getPassword().isBlank()) {
             config.setPassword(props.getRedis().getPassword());
         }
-        return new LettuceConnectionFactory(config);
+        // El backplane ElastiCache (Cluster #2) tiene transit_encryption habilitado
+        // en Ulink_Infra (var.backplane_tls_enabled default true). Sin useSsl() el
+        // handshake TLS falla y el pod queda unready. disablePeerVerification()
+        // porque los certificados AWS-managed no matchean el hostname master.*
+        // sin configurar el truststore del CA -- el transporte sigue cifrado, solo
+        // no se autentica el servidor.
+        LettuceClientConfiguration clientConfig = LettuceClientConfiguration.builder()
+                .useSsl()
+                .disablePeerVerification()
+                .build();
+        return new LettuceConnectionFactory(config, clientConfig);
     }
 
     @Bean

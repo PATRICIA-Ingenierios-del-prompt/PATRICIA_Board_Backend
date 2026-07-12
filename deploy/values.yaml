@@ -1,0 +1,72 @@
+# Defaults para el chart de Board. El job de CD sobreescribe image.repository
+# e image.tag en cada deploy (fijado al SHA corto del commit); todo lo demas se
+# edita aqui y se versiona junto con el codigo que configura.
+#
+# NAMING: infra usa "board" en TODO - ECR (patricia-dev/board), IRSA
+# (patricia-dev-board-irsa), secret patricia-dev/board/mongodb, backplane
+# channel patricia:backplane:board. spring.application.name=board-backend,
+# puerto 8086.
+#
+# SOCKET MS: Board esta en var.socket_services (infra), o sea que necesita el
+# backplane Redis (Cluster #2). El SecurityGroupPolicy del tier "socket"
+# (patricia-app-socket-pods) ya existe en Ulink_Infra desde el deploy de
+# Location (2026-07-11), asi que los pods de este chart obtienen la ruta de red
+# al Cluster #2 automaticamente por la label patricia.io/sg-tier: socket.
+#
+# ESTADO EN MEMORIA (seguimiento pendiente): BoardService guarda BoardState en
+# un ConcurrentHashMap en memoria, NO en Mongo. Con replicaCount=2 cada pod
+# tiene su propio estado de tablero; el backplane solo replica broadcasts de
+# strokes/cursors en vivo (la feature en tiempo real SI funciona cross-pod),
+# pero un cliente que carga un tablero via REST de un pod y reconecta a otro
+# vera estado distinto. La persistencia en Mongo (secret patricia-dev/board/
+# mongodb, ya provisionado) es un follow-up: agregar spring-boot-starter-data-
+# mongodb + persistir BoardState, y recien ahi cablear SPRING_DATA_MONGODB_URI
+# en el ExternalSecret de abajo.
+
+image:
+  repository: ""            # set by CD: <account>.dkr.ecr.<region>.amazonaws.com/patricia-dev/board
+  tag: ""                   # set by CD: short commit SHA
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+serviceAccount:
+  # Reutiliza el rol IRSA pre-provisionado (module.eks.service_irsa["board"]).
+  # Sin policy de permisos todavia (Board no llama APIs de AWS via IRSA hoy -
+  # RabbitMQ/Redis se alcanzan por Security Group, no IAM; Mongo Atlas es
+  # internet publico con user/pass, tampoco IAM). Dejar vacio hasta que se
+  # necesite una llamada real a un API de AWS via IRSA.
+  roleArn: ""
+
+config:
+  # No sensible.
+  # --- Backplane (Redis Cluster #2, pub/sub compartido entre MS de sockets) ---
+  # Habilitado desde el arranque: el SecurityGroupPolicy del tier "socket" ya
+  # existe (aplicado con Location); TLS en el Lettuce factory tambien esta
+  # cubierto por BackplaneConfig con useSsl() + disablePeerVerification().
+  backplaneEnabled: "true"
+  backplaneChannel: "patricia:backplane:board"
+
+externalSecrets:
+  clusterSecretStore: patricia-aws-secrets-manager
+  prefix: "patricia-dev"
+  # Secretos referenciados (todos ya existen en AWS Secrets Manager):
+  #   patricia-dev/amazon-mq       -> SPRING_RABBITMQ_ADDRESSES/USERNAME/PASSWORD
+  #   patricia-dev/backplane-redis -> BACKPLANE_REDIS_HOST/PORT/PASSWORD
+  #
+  # Board NO usa cache Redis (Cluster #1) - solo el backplane; por eso NO se
+  # cablea patricia-dev/cache-redis (a diferencia de Location/Communication).
+  #
+  # patricia-dev/board/mongodb (SPRING_DATA_MONGODB_URI) existe pero NO se
+  # cablea todavia: el app no tiene spring-boot-starter-data-mongodb ni usa
+  # Mongo (estado en memoria). Se agregara junto con la persistencia - ver
+  # nota de "ESTADO EN MEMORIA" arriba.
+
+resources:
+  requests: { cpu: 500m, memory: 768Mi }
+  limits:   { cpu: "1",  memory: 1Gi }
+
+hpa:
+  minReplicas: 2
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 70

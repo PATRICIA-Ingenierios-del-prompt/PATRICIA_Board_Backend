@@ -40,13 +40,13 @@ class WebSocketConfigTest {
         StompWebSocketEndpointRegistration registration = mock(StompWebSocketEndpointRegistration.class);
         SockJsServiceRegistration sockJsRegistration = mock(SockJsServiceRegistration.class);
 
-        when(registry.addEndpoint("/ws")).thenReturn(registration);
+        when(registry.addEndpoint("/ws/board")).thenReturn(registration);
         when(registration.setAllowedOriginPatterns(any(String[].class))).thenReturn(registration);
         when(registration.withSockJS()).thenReturn(sockJsRegistration);
 
         config.registerStompEndpoints(registry);
 
-        verify(registry, times(2)).addEndpoint("/ws");
+        verify(registry, times(2)).addEndpoint("/ws/board");
         verify(registration, times(2)).setAllowedOriginPatterns("*");
         verify(registration, times(1)).withSockJS();
     }
