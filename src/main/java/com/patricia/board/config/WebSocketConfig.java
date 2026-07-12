@@ -6,25 +6,33 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+/**
+ * STOMP con simple broker (in-JVM). ANTES: enableStompBrokerRelay contra el
+ * plugin STOMP de RabbitMQ. Se cambio porque Amazon MQ NO permite el plugin
+ * STOMP (v3 §6.6): el fan-out cross-pod ahora lo hace el backplane Redis
+ * (paquete {@code com.patricia.board.backplane}), no RabbitMQ.
+ *
+ * El PREFIJO se dejo en "/exchange" (ademas de /topic y /queue) para que los
+ * paths existentes que arrancan con /exchange/amq.topic/board.* SIGAN
+ * funcionando y no haya que tocar el frontend. Para el simple broker el
+ * prefijo es solo un namespace de subscripcion, no hay routing real detras.
+ */
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Enable a simple memory-based message broker
-        config.enableSimpleBroker("/topic");
-        // Prefix for messages bound for @MessageMapping methods
+        config.enableSimpleBroker("/exchange", "/topic", "/queue");
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // The endpoint clients will connect to
-        registry.addEndpoint("/ws")
+        registry.addEndpoint("/ws/board")
                 .setAllowedOriginPatterns("*")
-                .withSockJS(); // Optional fallback, or can just use raw websocket
-        registry.addEndpoint("/ws")
+                .withSockJS();
+        registry.addEndpoint("/ws/board")
                 .setAllowedOriginPatterns("*");
     }
 }

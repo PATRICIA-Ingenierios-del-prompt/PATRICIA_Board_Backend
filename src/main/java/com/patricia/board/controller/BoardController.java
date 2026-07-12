@@ -4,12 +4,12 @@ import com.patricia.board.dto.BoardResponse;
 import com.patricia.board.dto.CreateBoardResponse;
 import com.patricia.board.model.BoardState;
 import com.patricia.board.service.BoardService;
+import com.patricia.board.websocket.BoardBroadcaster;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -20,13 +20,16 @@ import java.util.UUID;
 @Tag(name = "Board Management", description = "Endpoints for managing collaborative whiteboards")
 public class BoardController {
 
+    private static final String BROKER_PREFIX = "/exchange";
+    private static final String RABBIT_EXCHANGE = "amq.topic";
+
     private final BoardService boardService;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final BoardBroadcaster broadcaster;
 
     @PostMapping
-    @Operation(summary = "Create a new board", description = "Creates a new empty board and returns its unique ID.")
-    public ResponseEntity<CreateBoardResponse> createBoard() {
-        UUID boardId = boardService.createBoard();
+    @Operation(summary = "Create a new board", description = "Creates a new empty board (optionally with a custom ID) and returns its unique ID.")
+    public ResponseEntity<CreateBoardResponse> createBoard(@RequestParam(required = false) UUID customId) {
+        UUID boardId = boardService.createBoard(customId);
         return ResponseEntity.status(HttpStatus.CREATED).body(new CreateBoardResponse(boardId));
     }
 
@@ -48,8 +51,12 @@ public class BoardController {
     @Operation(summary = "Clear a board", description = "Removes all strokes from the specified board and broadcasts a clear event to all active participants.")
     public ResponseEntity<Void> clearBoard(@PathVariable UUID boardId) {
         boardService.clearBoard(boardId);
-        // Broadcast clear event to all subscribers
-        messagingTemplate.convertAndSend("/topic/board/" + boardId + "/clear", "CLEAR");
+        // Broadcast clear event to all subscribers (via backplane if enabled)
+        broadcaster.send(brokerDestination(boardId, ".clear"), "CLEAR");
         return ResponseEntity.ok().build();
+    }
+
+    private String brokerDestination(UUID boardId, String suffix) {
+        return BROKER_PREFIX + "/" + RABBIT_EXCHANGE + "/board." + boardId + suffix;
     }
 }
