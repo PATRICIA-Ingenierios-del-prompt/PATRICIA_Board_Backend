@@ -42,6 +42,14 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-redis</artifactId>
 		</dependency>
+		<!-- Estado compartido del tablero (Atlas): con replicaCount=2 cada pod
+		     veia su propio ConcurrentHashMap y los strokes morian al cruzar
+		     de pod. Mongo es la fuente de verdad; el backplane solo hace
+		     fan-out en vivo. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>io.projectreactor.netty</groupId>
 			<artifactId>reactor-netty-http</artifactId>

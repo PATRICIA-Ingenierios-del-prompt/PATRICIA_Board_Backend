@@ -13,15 +13,12 @@
 # Location (2026-07-11), asi que los pods de este chart obtienen la ruta de red
 # al Cluster #2 automaticamente por la label patricia.io/sg-tier: socket.
 #
-# ESTADO EN MEMORIA (seguimiento pendiente): BoardService guarda BoardState en
-# un ConcurrentHashMap en memoria, NO en Mongo. Con replicaCount=2 cada pod
-# tiene su propio estado de tablero; el backplane solo replica broadcasts de
-# strokes/cursors en vivo (la feature en tiempo real SI funciona cross-pod),
-# pero un cliente que carga un tablero via REST de un pod y reconecta a otro
-# vera estado distinto. La persistencia en Mongo (secret patricia-dev/board/
-# mongodb, ya provisionado) es un follow-up: agregar spring-boot-starter-data-
-# mongodb + persistir BoardState, y recien ahi cablear SPRING_DATA_MONGODB_URI
-# en el ExternalSecret de abajo.
+# ESTADO COMPARTIDO (resuelto 2026-07-15): BoardState vive en Mongo (Atlas,
+# secret patricia-dev/board/mongodb via ExternalSecret), asi que los 2 pods
+# sirven el mismo tablero: strokes con $push atomico, sin carreras
+# load-modify-save, y el rejoin ve todo lo dibujado sin importar el pod. El
+# backplane sigue haciendo solo el fan-out en vivo. Indice TTL: tableros sin
+# actividad por 30 dias se auto-eliminan.
 
 image:
   repository: ""            # set by CD: <account>.dkr.ecr.<region>.amazonaws.com/patricia-dev/board

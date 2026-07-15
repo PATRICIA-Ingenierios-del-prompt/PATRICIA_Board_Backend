@@ -95,11 +95,15 @@ class ModelAndDtoTest {
         assertEquals(boardId, b1.getBoardId());
         assertEquals(strokes, b1.getStrokes());
 
+        // lastActivityAt is set to now() by the convenience constructors (TTL
+        // clock), so equality is only stable once it's aligned explicitly.
         BoardState b2 = new BoardState(boardId);
         b2.setStrokes(strokes);
+        b2.setLastActivityAt(b1.getLastActivityAt());
         assertEquals(b1, b2);
 
         BoardState b3 = new BoardState(boardId, strokes);
+        b3.setLastActivityAt(b1.getLastActivityAt());
         assertEquals(b1, b3);
         assertEquals(b1.hashCode(), b3.hashCode());
         assertNotNull(b1.toString());
